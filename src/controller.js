@@ -22,7 +22,7 @@ module.exports = {
    * Get contract information from Rahat server
    */
   async getContract() {
-    let res = await axios(`${rahatServer}/api/v1/app/contracts/Rahat`);
+    let res = await axios(`${rahatServer}/api/v1/app/contracts/Regulator`);
     const { abi } = res.data;
     res = await axios(`${rahatServer}/api/v1/app/settings`);
     const contractAddress = res.data.agency.contracts.rahat;
@@ -72,6 +72,7 @@ module.exports = {
    */
   async listen() {
     const contract = await this.getContract();
+    console.log({contract});
     contract.on('ClaimedERC20', async (vendor, phone, amount) => {
       try {
         const otp = await this.getOtp(phone);
@@ -84,16 +85,6 @@ module.exports = {
       }
     });
 
-    contract.on('ClaimedERC1155', async (vendor, phone, tokenId, amount) => {
-      try {
-        const otp = await this.getOtp(phone);
-        if (!otp) return;
-        await this.setHashToChain_ERC1155(contract, vendor, phone.toString(), otp, tokenId);
-        this.sendMessage(phone, otp, amount);
-      } catch (e) {
-        console.log(e);
-      }
-    });
 
     provider.on('pending', async txHash => {
       const tx = await provider.getTransaction(txHash);
